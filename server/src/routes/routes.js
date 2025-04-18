@@ -15,6 +15,6 @@ route.post("/new/user", newUser);
 route.get("/fetch/users", fetchAllUsers);
 
 route.get("/fetch/columns/:clientId", fetchAllColumns);
-route.put("/update/columns", updateDynamicColumns);
+route.put("/update/columns/:clientId", updateDynamicColumns);
 
 export default route;

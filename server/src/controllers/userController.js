@@ -61,7 +61,9 @@ export const fetchAllColumns = async (req, res) => {
 
 export const updateDynamicColumns = async (req, res) => {
   try {
-    const { clientId, columns } = req.body;
+    const { columns } = req.body;
+    const { clientId } = req.params;
+    
     if (!clientId)
       return res.status(400).json({ message: "Client ID is required" });
 
