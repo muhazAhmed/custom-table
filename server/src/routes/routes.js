@@ -2,6 +2,7 @@ import express from "express";
 import {
   fetchAllColumns,
   fetchAllUsers,
+  loginUser,
   newUser,
   updateDynamicColumns,
 } from "../controllers/userController.js";
@@ -12,6 +13,7 @@ route.get("/", (req, res) => {
 });
 
 route.post("/new/user", newUser);
+route.post("/login/user", loginUser)
 route.get("/fetch/users", fetchAllUsers);
 
 route.get("/fetch/columns/:clientId", fetchAllColumns);

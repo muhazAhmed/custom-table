@@ -1,15 +1,22 @@
 import UserModel from "../models/userModel.js";
 import dynamicData from "../models/dynamicData.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 export const newUser = async (req, res) => {
   try {
-    const { name, email, phone, address, dob, designation } = req.body;
+    const { name, email, phone, address, dob, designation, password } =
+      req.body;
     if (!name) return res.status(400).json({ message: "Name is required" });
     if (!email) return res.status(400).json({ message: "Email is required" });
     if (!phone) return res.status(400).json({ message: "Phone is required" });
+    if (!password)
+      return res.status(400).json({ message: "Password is required" });
     if (!address)
       return res.status(400).json({ message: "Address is required" });
     if (!dob) return res.status(400).json({ message: "DOB is required" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
     const user = await UserModel.create({
       name,
       email,
@@ -17,6 +24,7 @@ export const newUser = async (req, res) => {
       address,
       dob,
       designation,
+      password: hashedPassword,
     });
 
     const columns = [
@@ -33,6 +41,23 @@ export const newUser = async (req, res) => {
       columns,
     });
     return res.status(201).json(user);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+    if (!password)
+      return res.status(400).json({ message: "Password is required" });
+    const user = await UserModel.findOne({ email });
+    if (!user) return res.status(400).json({ message: "User not found" });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
+    return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -63,7 +88,7 @@ export const updateDynamicColumns = async (req, res) => {
   try {
     const { columns } = req.body;
     const { clientId } = req.params;
-    
+
     if (!clientId)
       return res.status(400).json({ message: "Client ID is required" });
 
