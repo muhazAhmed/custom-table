@@ -10,20 +10,24 @@ import {
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
 import { Button } from "./components/ui/button";
+import Login from "./login/Login";
+import { deleteSessionStorage, useSessionStorage } from "./lib/utils";
 
 function App() {
   const [columns, setColumns] = useState<any[]>([]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [hasLoggedIn, setHasLoggedIn] = useState<boolean>(false);
+  const userInfo = useSessionStorage("userInfo");
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (id: any) => {
     const res = await GetMethodAPI({
       endpoint: "/fetch/users",
       loading: setLoading,
     });
     if (res) {
       setRows(res);
-      fetchColumns("6801385e15b682b718300210");
+      fetchColumns(id);
     }
   };
 
@@ -39,33 +43,42 @@ function App() {
   };
 
   const updateColumns = async (clientId: string, updatedCols: any[]) => {
-    const res = await PutMethodAPI({
+    await PutMethodAPI({
       endpoint: "/update/columns/" + clientId,
       payload: { columns: updatedCols },
       loading: setLoading,
     });
-    if (res) {
-      setColumns(res.columns?.columns);
-    }
   };
 
-  const handleColumnToggle = (name: string, checked: boolean) => {
-    const updatedColumns = columns.map((col) =>
-      col.name === name ? { ...col, required: checked } : col
+  const handleColumnToggle = (name: string) => {
+    const updatedCols = columns.map((col) =>
+      col.name === name ? { ...col, required: !col.required } : col
     );
+    setColumns(updatedCols);
+  };
 
-    setColumns(updatedColumns);
-    updateColumns("6801385e15b682b718300210", updatedColumns);
+  const handleLogout = () => {
+    setLoading(true);
+    deleteSessionStorage("userInfo");
+    setColumns([]);
+    setRows([]);
+    setLoading(false);
+    setHasLoggedIn(true);
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (!userInfo) {
+      setHasLoggedIn(true);
+    } else {
+      fetchUsers(userInfo?._id);
+    }
+  }, [hasLoggedIn]);
 
   return (
     <div className="p-3 w-full h-svh flex items-center gap-5 flex-col">
+      {hasLoggedIn && <Login onOpenChange={setHasLoggedIn} />}
       <h1 className="text-3xl font-bold">Custom Table</h1>
-      <div className="w-full flex justify-end">
+      <div className="w-full flex justify-end gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">Select Columns</Button>
@@ -79,20 +92,31 @@ function App() {
                 className="flex items-center px-2 py-1.5 space-x-2 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleColumnToggle(col.name, !col.required);
+                  handleColumnToggle(col.name);
                 }}
               >
                 <input
                   type="checkbox"
                   checked={col.required}
-                  onChange={() => {}}
+                  onChange={() => handleColumnToggle(col.name)}
                   className="accent-blue-950"
                 />
                 <label className="text-sm">{col.label}</label>
               </div>
             ))}
+            <DropdownMenuSeparator />
+            <Button
+              className="w-full"
+              onClick={() => updateColumns(userInfo?._id, columns)}
+            >
+              Apply
+            </Button>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button variant="destructive" onClick={handleLogout}>
+          Logout
+        </Button>
       </div>
 
       {loading && (

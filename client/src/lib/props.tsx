@@ -19,3 +19,7 @@ export type apiConfigProps = {
     payload?: Record<string, any>;
     loading: (isLoading: boolean) => void
 }
+
+export interface IModal {
+  onOpenChange: (open: boolean) => void;
+}

@@ -19,7 +19,6 @@ const DynamicTable: FC<DynamicTableProps> = ({
   tableHeaderClassName,
   tableBodyClassName,
 }) => {
-  console.log(columns);
   return (
     <Table className={tableClassName}>
       {tableCaption && <TableCaption>{tableCaption}</TableCaption>}
